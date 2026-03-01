@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éternel - 洗練されたライフスタイル</title>
+    <style>
+        /* =========================================
+           ベースデザイン & 既存トラップ
+           ========================================= */
+        :root { --primary-color: #333; --bg-color: #fafafa; }
+        body.trap-rtl { direction: rtl; } body.trap-rtl .content-wrapper { direction: ltr; }
+        body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; color: var(--primary-color); background-color: var(--bg-color); transition: all 0.5s ease; background-image: url('https://www.transparenttextures.com/patterns/cubes.png'); background-attachment: scroll; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 50px; background: #fff; box-shadow: 0 1px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .nav-links a { margin: 0 15px; text-decoration: none; color: #333; font-weight: bold; }
+        .logo { font-size: 24px; font-weight: bold; cursor: pointer; transition: transform 2s ease-in; }
+        .progress-bar { font-family: monospace; font-size: 16px; font-weight: bold; color: #d9534f; cursor: pointer; }
+        section { padding: 60px 50px; max-width: 800px; margin: 0 auto; min-height: 40vh; }
+        .btn { display: inline-block; padding: 10px 25px; background: var(--primary-color); color: #fff; text-decoration: none; border: none; cursor: pointer; margin-top: 10px; }
+        .fall-down { transform: translateY(2000px) rotate(720deg); }
+        .trap-overline { text-decoration-line: overline !important; }
+        #fake-notification { position: fixed; bottom: 20px; right: 20px; background: #007bff; color: white; padding: 15px 20px; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; transition: 0.3s; }
+        .flash-bang { animation: flash 1s ease-out; }
+        @keyframes flash { 0% { filter: invert(100%) brightness(200%); } 100% { filter: invert(0); } }
+        #toast-container { position: fixed; top: 80px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background: rgba(46, 204, 113, 0.9); color: white; padding: 12px 20px; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-weight: bold; font-size: 14px; animation: slideIn 0.3s ease-out forwards; }
+        .toast.fade-out { animation: fadeOut 0.5s ease-in forwards; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
+        
+        #invisible-btn { opacity: 0.01; position: absolute; top: 15px; left: 15px; width: 30px; height: 30px; z-index: 9999; cursor: crosshair; }
+        #cursed-element { position: fixed; bottom: 0; left: 0; background: #ff0000; color: white; font-size: 10px; padding: 2px; z-index: 1; pointer-events: none; }
+        #cursed-period { cursor: crosshair; color: inherit; }
+        .blur-trap { transition: filter 2s; } .blur-trap:hover { filter: blur(5px); }
+        #mad-marquee { background: #000; color: #0f0; padding: 5px; cursor: pointer; font-family: monospace; }
+        #fake-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9998; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; display: none; user-select: none; }
+        .spinner { border: 8px solid #f3f3f3; border-top: 8px solid #333; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-right: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #tab-focus-btn { position: absolute; top: -100px; left: 0; background: red; color: white; padding: 10px; z-index: 1000; }
+        #tab-focus-btn:focus { top: 100px; }
+        #hero-img { width: 100%; max-width: 400px; height: 200px; background: #ddd; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; transition: transform 0.2s; cursor: grab; }
+        #popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; }
+        #popup-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 40px; border-radius: 10px; text-align: center; width: 300px; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        #popup-close { position: absolute; top: 10px; right: 10px; transition: 0.2s; margin: 0; padding: 5px 10px; }
+        
+        /* 修正: マウスの真ん中に来るようにサイズ調整 */
+        #stalker-dot { position: fixed; width: 20px; height: 20px; background: red; border-radius: 50%; pointer-events: auto; z-index: 9999; cursor: pointer; box-shadow: 0 0 5px red; display: none; }
+
+        /* =========================================
+           v6 最終トラップ用CSS (41〜50)
+           ========================================= */
+        /* 変更: 白文字を選択可能にし、ハイライト時に色を反転 */
+        #white-text { color: var(--bg-color); cursor: text; font-size: 14px; user-select: text; }
+        #white-text::selection { background: #333; color: #fff; }
+        
+        /* 変更: ボスのボタンを動きやすく */
+        #final-boss-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(150,0,0,0.95); z-index: 10001; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #final-boss-btn { padding:20px 40px; font-size:24px; color:white; background:black; border:3px solid red; cursor:pointer; margin-top:30px; transition: 0.2s; position: relative; }
+        .new-section { padding: 40px 50px; background: #eee; margin-bottom: 20px; border-radius: 8px; }
+        #drop-target { width: 150px; height: 100px; border: 3px dashed #999; display: flex; align-items: center; justify-content: center; margin-top: 10px; }
+        #drag-source { display: inline-block; padding: 10px; background: #333; color: white; cursor: grab; margin-right: 20px; }
+       
+        footer { text-align: center; padding: 50px; font-size: 12px; color: #999; margin-bottom: 500px; }
+        #reset-save { cursor: pointer; color: #ccc; text-decoration: underline; }
+        #ending-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: opacity 3s ease; text-align: center; }
+    </style>
+</head>
+<body class="trap-rtl">
+    <div class="content-wrapper" id="main-wrapper">
+        <header>
+            <div class="logo" id="logo">Éternel</div>
+            <div class="nav-links">
+                <a href="#" id="link-about">About</a>
+                <a href="#" id="link-contact">Contact</a>
+                <button id="lang-btn" class="btn" style="padding: 5px 10px; margin:0;">EN / JP</button>
+            </div>
+            <div class="progress-bar" id="progress-display" title="クリックしてみて？">Progress: [ 0 / 50 ]</div>
+            <button id="invisible-btn" title="透明ボタン"></button>
+        </header>
+
+        <div id="toast-container"></div>
+        <button id="tab-focus-btn">Tabキーマスター！</button>
+
+        <section id="home">
+            <h1>洗練された空間を、あなたに。</h1>
+            <div id="hero-img" draggable="true">美しい家具の画像（ドラッグ不可）</div>
+            
+            <p class="blur-trap" id="blur-text">無駄を省き、本質だけを残したデザイン<span id="cursed-period">。</span><br>私たちÉternelは、あなたの生活に<span id="target-word" style="font-weight:bold;">静寂</span>と美しさをもたらします。</p>
+            
+            <a href="#" class="btn" id="read-more-btn">Read More</a><br><br>
+            <a href="#" id="trap-link" style="color: blue; text-decoration: underline;">私たちの歴史について詳しく知る</a><br><br>
+            
+            <button class="btn" id="dark-mode-btn" style="background: #555;">🌙 ダークモード</button>
+            <button class="btn" id="long-press-btn" style="background: #888;">3秒長押し</button>
+            <button class="btn" id="shift-btn" style="background: #888;">注意深く押せ</button>
+            <button class="btn" id="hover-5s-btn" style="background: #888;">5秒見つめて</button>
+            <br><br>
+            <a href="#" id="double-click-link" style="color: blue; text-decoration: underline;">ダブルクリック専用リンク</a>
+            <br><br>
+            <span id="triple-click-txt" style="cursor: pointer; font-weight: bold;">ここを3回連続でクリック</span>
+        </section>
+
+        <section class="new-section">
+            <h2>Developers Only</h2>
+            <button id="disabled-btn" class="btn" disabled>押せないボタン</button>
+            <br><br>
+            <input type="text" id="maxlength-input" maxlength="3" placeholder="エテルネル（4文字入力）" style="padding: 5px;">
+            <br><br>
+            <select id="hidden-option" style="padding: 5px;">
+                <option>選択してください</option>
+                <option disabled value="clear">正解（選択不可）</option>
+            </select>
+            <br><br>
+            <div style="display: flex; align-items: center;">
+                <div id="drag-source" draggable="true">不要な仕様</div>
+                <div id="drop-target">ゴミ箱</div>
+            </div>
+        </section>
+
+        <section id="contact">
+            <h2>Contact</h2>
+            <input type="text" id="name-input" placeholder="お名前" style="padding: 10px; width: 100%; margin-bottom: 10px;">
+            <input type="password" id="pass-input" placeholder="パスワード（'clear'と入力）" style="padding: 10px; width: 100%; margin-bottom: 5px;">
+            <marquee id="pass-echo" style="color: red; display: none; font-weight: bold; margin-bottom: 10px;"></marquee>
+
+            <label style="display: block; margin-bottom: 10px; cursor: pointer;">
+                <input type="checkbox" id="agree-check"> プライバシーポリシーに同意する
+            </label>
+            <button class="btn" id="contact-btn" style="position: relative;">送信する</button>
+            <button class="btn" id="math-btn" style="background: #d9534f;">最終確認</button>
+        </section>
+
+        <marquee id="mad-marquee">お知らせ：現在サイトに多数の不具合が発生しております。修正の予定はありません。</marquee>
+
+        <footer>
+            <span id="white-text" title="クリックできるよ">隠された真実</span><br><br>
+            &copy; <span id="copyright-year" style="cursor: pointer;">2045</span> Éternel. All rights reserved.<br><br>
+            <span id="reset-save">※セーブデータをリセットする</span>
+        </footer>
+
+        <div id="fake-notification">📩 新着メッセージが1件あります</div>
+        <div id="cursed-element">この要素をDOMツリーから削除せよ</div>
+        <div id="fake-loader"><div class="spinner"></div>通信中...（ダブルクリックで破壊）</div>
+
+        <div id="popup-overlay"><div id="popup-content"><h2>💣 特別オファー！</h2><p>邪魔なポップアップ広告です。</p><button class="btn" id="popup-close">✖</button></div></div>
+        <div id="stalker-dot"></div>
+
+        <div id="final-boss-container">
+            <h1 style="color: white; font-size: 3em;">最後の試練</h1>
+            <p style="color: #ccc; font-size: 1.2em;">よくぞここまで辿り着いた。この狂気を破壊せよ。</p>
+            <button id="final-boss-btn" style="padding:20px 40px; font-size:24px; color:white; background:black; border:3px solid red; cursor:pointer; margin-top:30px; transition: 0.1s;">浄化する (残り10回)</button>
+        </div>
+
+        <div id="ending-screen">
+            <h1>You are the True Debugger.</h1>
+            <p>50のバグは、あなたによって全て浄化されました。</p>
+            <p>美しいインターネットに、祝福を。</p>
+            <p style="margin-top: 50px; font-size: 50px;">👑</p>
+        </div>
+    </div>
+
+    <script>
+        const $ = id => document.getElementById(id);
+        // --- コンソールヒント ---
+        console.log("%c[Éternel System] サイトの読み込みが完了しました...", "color: #0f0; background: #000; font-size: 14px; padding: 5px;");
+        console.log("%c💡 ヒント1: ここを見ているということは、あなたは優秀なデバッガーですね。まずは 'unlockDevTrap()' と入力してEnterを押してみましょう。", "color: #add8e6; font-size: 12px;");
+        console.warn("⚠️ 警告: DOMツリーの中に、透明なボタンや削除すべき呪われた要素、偽装された属性が潜んでいます。Elementsタブをよく観察してください。");
+        const TOTAL_TRAPS = 50;
+        let foundTraps = new Set();
+
+        const trapNames = {
+            'trap-ui-weired': '左利きの世界', 'trap-gravity-logo': '重力に負けたロゴ', 'trap-read-less': '虚無のRead More',
+            'trap-overline': '裏切りのアンダーライン', 'trap-runaway-btn': '逃げる送信ボタン', 'trap-input-lag': '地獄の遅延入力',
+            'trap-lang-lorem': 'ラテン語への翻訳', 'trap-fake-notif': '嘘の通知', 'trap-right-click': '右クリック過剰防衛',
+            'trap-lost-link': '迷子のリンク', 'trap-reverse-scroll': '逆走する背景', 'trap-shrinking-world': '縮む世界',
+            'trap-fake-checkbox': '同意させないチェック', 'trap-darkmode-flash': 'フラッシュバン', 'trap-future-year': '未来の年号',
+            'trap-console-secret': 'コンソールハック', 'trap-invisible-btn': 'DOMツリーの透明ボタン', 'trap-html-comment': 'ソースコードの暗号',
+            'trap-konami-code': 'いにしえの隠しコマンド', 'trap-dom-deletion': '呪われたDOMの除去', 'trap-tab-panic': 'メンヘラなタブ',
+            'trap-copy-hijack': 'クリップボード乗っ取り', 'trap-cursed-period': '呪われた句読点', 'trap-blur-text': 'ぼやける視界',
+            'trap-mad-marquee': '狂気のマーキー破壊', 'trap-fake-loader': '偽ローディングの破壊', 'trap-global-var': '世界への平和',
+            'trap-tab-focus': 'Tabキーフォーカス', 'trap-drag-image': '拒絶する画像', 'trap-window-resize': '閉所恐怖症のサイト',
+            'trap-fake-popup': '逃げるポップアップ広告', 'trap-stalker': 'ストーカーカーソル', 'trap-long-press': '3秒長押しボタン',
+            'trap-shift-click': 'Shiftキー必須', 'trap-text-select': '「静寂」の選択', 'trap-password-echo': 'パスワード暴露',
+            'trap-double-click': 'ダブルクリックの罠', 'trap-scroll-bottom': '最深部の秘密', 'trap-click-progress': 'プログレスバー連打',
+            'trap-math-captcha': '算数CAPTCHA', 
+            // --- v6 新規 (41〜50) ---
+            'trap-white-text': '白背景の白文字', 'trap-typing-magic': '魔法のタイピング', 'trap-disabled-btn': '属性の壁(disabled)',
+            'trap-maxlength': '字数制限の突破', 'trap-hidden-option': '隠された選択肢', 'trap-triple-click': 'トリプルクリック',
+            'trap-zoom': 'ズームインの視界', 'trap-drag-drop': 'ゴミ箱へのポイ捨て', 'trap-hover-5s': '5秒間の凝視',
+            'trap-final-boss': '最後の浄化'
+        };
+
+        function showToast(trapId) {
+            const toast = document.createElement('div');
+            toast.className = 'toast'; toast.innerText = `💡 解除: ${trapNames[trapId]}`;
+            $('toast-container').appendChild(toast);
+            setTimeout(() => toast.classList.add('fade-out'), 3500);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function trapFound(trapId) {
+            if (!foundTraps.has(trapId)) {
+                foundTraps.add(trapId); playDingSound(); showToast(trapId);
+                $('progress-display').innerText = `Progress: [ ${foundTraps.size} / ${TOTAL_TRAPS} ]`;
+                localStorage.setItem('eternel_save', JSON.stringify(Array.from(foundTraps)));
+                
+                if (foundTraps.size === 49) {
+                    setTimeout(() => { $('final-boss-container').style.display = 'flex'; }, 1000);
+                } else if (foundTraps.size === TOTAL_TRAPS) {
+                    triggerEnding();
+                }
+            }
+        }
+
+        function playDingSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator(); const gn = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(1200, ctx.currentTime);
+                gn.gain.setValueAtTime(0.3, ctx.currentTime); gn.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                osc.connect(gn); gn.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.5);
+            } catch(e) {}
+        }
+
+        // --- 修正されたトラップたち ---
+
+        // 修正: ダブルクリック (alertで処理が止まらないように変更)
+        $('double-click-link').addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            if(!foundTraps.has('trap-double-click')) e.target.innerText="1回じゃ足りない！"; 
+        });
+        $('double-click-link').addEventListener('dblclick', (e) => { 
+            e.preventDefault(); trapFound('trap-double-click'); e.target.innerText="愛を受け取りました"; 
+        });
+
+        // 修正: ストーカーカーソル (マウスの中心にピタッと来るように dx - 10 に変更)
+        let mx=0, my=0, dx=0, dy=0;
+        document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+        function moveDot() {
+            dx += (mx - dx) * 0.08; dy += (my - dy) * 0.08;
+            $('stalker-dot').style.left = (dx - 10) + 'px'; // 20pxの半分を引いて中央へ
+            $('stalker-dot').style.top = (dy - 10) + 'px';
+            if(!foundTraps.has('trap-stalker')) requestAnimationFrame(moveDot);
+        }
+        setTimeout(() => { if(!foundTraps.has('trap-stalker')) { $('stalker-dot').style.display='block'; moveDot(); } }, 3000);
+        $('stalker-dot').addEventListener('click', function() { this.style.display='none'; trapFound('trap-stalker'); });
+
+        // 修正: 算数CAPTCHA (全角数字対応、空白・キャンセル対応)
+        $('math-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const ans = prompt("ロボットではないことを証明してください。\n 15 + 28 = ?");
+            if(ans && (ans.trim() === "43" || ans.trim() === "４３")) { 
+                trapFound('trap-math-captcha'); this.innerText="確認完了"; this.style.background="green"; 
+            } else { alert("計算もできないのですか？"); }
+        });
+
+        // --- 既存トラップ (簡略版) ---
+        document.body.addEventListener('click', () => trapFound('trap-ui-weired'), { once: true });
+        $('logo').addEventListener('click', function() { this.classList.add('fall-down'); trapFound('trap-gravity-logo'); });
+        $('read-more-btn').addEventListener('click', function(e) { e.preventDefault(); this.innerText = "読ませない"; trapFound('trap-read-less'); });
+        $('trap-link').addEventListener('mouseover', function() { this.classList.add('trap-overline'); trapFound('trap-overline'); });
+        $('contact-btn').addEventListener('mouseover', function() { this.style.left = (Math.random()*200-100)+'px'; this.style.top = (Math.random()*200-100)+'px'; trapFound('trap-runaway-btn'); });
+        $('name-input').addEventListener('keydown', (e) => { if(e.key.length===1) { e.preventDefault(); setTimeout(() => { e.target.value += e.key; trapFound('trap-input-lag'); if(e.target.value.includes("debug404")){e.target.value="";trapFound('trap-html-comment');} }, 800); } });
+        $('lang-btn').addEventListener('click', function() { document.querySelector('h1').innerText = "Lorem ipsum dolor sit amet."; trapFound('trap-lang-lorem'); });
+        document.addEventListener('contextmenu', (e) => { e.preventDefault(); alert("コピー禁止！"); trapFound('trap-right-click'); });
+        $('link-about').addEventListener('click', (e) => { e.preventDefault(); trapFound('trap-lost-link'); });
+        window.addEventListener('scroll', () => { const s = window.scrollY; if (s > 50) { document.body.style.backgroundPosition = `0px ${-s*2}px`; trapFound('trap-reverse-scroll'); $('main-wrapper').style.transform = `scale(${Math.max(0.5, 1 - (s/2000))})`; trapFound('trap-shrinking-world'); } });
+        $('agree-check').addEventListener('change', function() { if(this.checked) { setTimeout(() => this.checked = false, 200); trapFound('trap-fake-checkbox'); } });
+        $('dark-mode-btn').addEventListener('click', function() { document.body.classList.add('flash-bang'); setTimeout(() => document.body.classList.remove('flash-bang'), 1000); trapFound('trap-darkmode-flash'); });
+        $('copyright-year').addEventListener('click', function() { this.innerText = new Date().getFullYear(); trapFound('trap-future-year'); });
+        window.unlockDevTrap = function() { trapFound('trap-console-secret'); return "Clear"; };
+        $('invisible-btn').addEventListener('click', () => trapFound('trap-invisible-btn'));
+        let kIdx = 0; const kCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        document.addEventListener('keydown', (e) => { if (e.key === kCode[kIdx]) { kIdx++; if (kIdx === kCode.length) { trapFound('trap-konami-code'); kIdx = 0; } } else { kIdx = 0; } });
+        new MutationObserver((mutations) => { mutations.forEach((m) => { if (m.removedNodes) { m.removedNodes.forEach((n) => { if (n.id === 'cursed-element') trapFound('trap-dom-deletion'); }); } }); }).observe(document.body, { childList: true, subtree: true });
+        const ogTitle = document.title; document.addEventListener('visibilitychange', () => { if (document.hidden) document.title = "どこ行くの！？捨てないで！"; else { document.title = ogTitle; trapFound('trap-tab-panic'); } });
+        document.addEventListener('copy', (e) => { e.clipboardData.setData('text/plain', '無駄な足掻きです。'); e.preventDefault(); alert("コピーを検知。"); trapFound('trap-copy-hijack'); });
+        $('cursed-period').addEventListener('click', function() { this.innerText = "💥"; trapFound('trap-cursed-period'); });
+        $('blur-text').addEventListener('click', function() { this.classList.remove('blur-trap'); this.style.filter = 'none'; trapFound('trap-blur-text'); });
+        $('mad-marquee').addEventListener('click', function() { this.stop(); this.style.textDecoration = "line-through"; trapFound('trap-mad-marquee'); });
+        setTimeout(() => { if(!foundTraps.has('trap-fake-loader')) $('fake-loader').style.display = 'flex'; }, 10000);
+        $('fake-loader').addEventListener('dblclick', function() { this.style.display = 'none'; trapFound('trap-fake-loader'); });
+        Object.defineProperty(window, 'peace', { set: function(v) { if (v === true) trapFound('trap-global-var'); } });
+        $('tab-focus-btn').addEventListener('focus', function() { trapFound('trap-tab-focus'); this.innerText = "見つかっちゃった！"; });
+        $('hero-img').addEventListener('dragstart', function(e) { e.preventDefault(); this.style.transform = `translate(${Math.random()*100-50}px, ${Math.random()*100-50}px) scale(0.8)`; this.innerText = "触らないで！"; trapFound('trap-drag-image'); });
+        window.addEventListener('resize', () => trapFound('trap-window-resize'));
+        setTimeout(() => { if(!foundTraps.has('trap-fake-popup')) $('popup-overlay').style.display = 'block'; }, 5000);
+        $('popup-close').addEventListener('mouseover', function() { this.style.top = (Math.random() * 80) + '%'; this.style.right = (Math.random() * 80) + '%'; });
+        $('popup-overlay').addEventListener('click', function(e) { if (e.target === this) { this.style.display = 'none'; trapFound('trap-fake-popup'); } });
+        let pressT; $('long-press-btn').addEventListener('mousedown', function() { this.innerText = "そのまま..."; pressT = setTimeout(() => { trapFound('trap-long-press'); this.innerText="解除成功"; this.style.background="green"; }, 3000); });
+        const resetPress = () => { clearTimeout(pressT); if(!foundTraps.has('trap-long-press')) $('long-press-btn').innerText="3秒長押し"; }; $('long-press-btn').addEventListener('mouseup', resetPress); $('long-press-btn').addEventListener('mouseleave', resetPress);
+        $('shift-btn').addEventListener('click', function(e) { if(e.shiftKey) { trapFound('trap-shift-click'); this.innerText="正解！"; this.style.background="green"; } else alert("Shiftキーを押しながらクリック！"); });
+        document.addEventListener('selectionchange', () => { const text = window.getSelection().toString(); if(text === "静寂") trapFound('trap-text-select'); });
+        $('pass-input').addEventListener('input', function() { const echo = $('pass-echo'); echo.style.display = 'block'; echo.innerText = `📢 みんな聞いて！パスワードは「${this.value}」だよ！`; if(this.value === "clear") trapFound('trap-password-echo'); });
+        window.addEventListener('scroll', () => { if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 5) trapFound('trap-scroll-bottom'); });
+        let progClick = 0; $('progress-display').addEventListener('click', () => { progClick++; if(progClick >= 5) trapFound('trap-click-progress'); });
+        $('fake-notification').addEventListener('click', function() { this.innerText = "自意識過剰ですね"; this.style.background = "#d9534f"; setTimeout(() => this.style.display = 'none', 2000); trapFound('trap-fake-notif'); });
+
+        // =========================================
+        // ★v6 最終トラップ (41〜50)
+        // =========================================
+
+        // 41. 白背景に白文字
+        $('white-text').addEventListener('click', function() {
+            this.style.color = "red";
+            this.innerText = "見つけたな";
+            trapFound('trap-white-text');
+        });
+
+        // 42. 魔法のタイピング
+        let magicStr = "";
+        window.addEventListener('keydown', e => {
+            magicStr += e.key.toLowerCase();
+            if(magicStr.includes("magic")) {
+                trapFound('trap-typing-magic');
+                magicStr = ""; // リセット
+            }
+        });
+
+        // 43. 属性の壁 (disabled)
+        $('disabled-btn').addEventListener('click', function() {
+            trapFound('trap-disabled-btn');
+            this.innerText = "属性突破";
+            this.style.background = "green";
+        });
+
+        // 44. 字数制限の突破 (maxlength)
+        $('maxlength-input').addEventListener('input', function() {
+            if(this.value === "エテルネル") {
+                trapFound('trap-maxlength');
+                this.style.background = "#cfc";
+            }
+        });
+
+        // 45. 隠された選択肢
+        $('hidden-option').addEventListener('change', function() {
+            if(this.value === "clear") trapFound('trap-hidden-option');
+        });
+
+        // 46. トリプルクリック
+        $('triple-click-txt').addEventListener('click', function(e) {
+            if(e.detail === 3) {
+                trapFound('trap-triple-click');
+                this.style.color = "green";
+                this.innerText = "クリア！";
+            }
+        });
+
+        // 47. ズームインの視界
+        window.addEventListener('resize', () => {
+            if (window.devicePixelRatio > 1.2 && !foundTraps.has('trap-zoom')) {
+                trapFound('trap-zoom');
+            }
+        });
+
+        // 48. ドラッグ＆ドロップ (ゴミ箱)
+        $('drop-target').addEventListener('dragover', e => e.preventDefault());
+        $('drop-target').addEventListener('drop', function(e) {
+            e.preventDefault();
+            trapFound('trap-drag-drop');
+            $('drag-source').style.display = 'none';
+            this.innerText = "処理完了";
+            this.style.background = "#cfc";
+        });
+
+        // 49. 5秒間の凝視 (Hover)
+        let hoverTimer;
+        $('hover-5s-btn').addEventListener('mouseenter', function() {
+            this.innerText = "動かないで...";
+            hoverTimer = setTimeout(() => {
+                trapFound('trap-hover-5s');
+                this.innerText = "耐え抜いた！";
+                this.style.background = "green";
+            }, 5000);
+        });
+        $('hover-5s-btn').addEventListener('mouseleave', function() {
+            clearTimeout(hoverTimer);
+            if(!foundTraps.has('trap-hover-5s')) this.innerText = "5秒見つめて";
+        });
+
+        // 50. 最後の浄化
+        // 50. 最後の浄化（集大成ラスボス）
+        let bossPhase = 1;
+        let bossTimer;
+        const bossBtn = $('final-boss-btn');
+
+        // 第三形態：逃げる
+        bossBtn.addEventListener('mouseover', function() {
+            if(bossPhase === 3) {
+                this.style.transform = `translate(${Math.random()*400-200}px, ${Math.random()*400-200}px)`;
+            }
+        });
+
+        // 第五形態：長押し
+        bossBtn.addEventListener('mousedown', function() {
+            if(bossPhase === 5) {
+                this.innerText = "そのまま...";
+                bossTimer = setTimeout(() => { bossPhase++; checkBoss(); }, 3000);
+            }
+        });
+        bossBtn.addEventListener('mouseup', () => { if(bossPhase === 5) { clearTimeout(bossTimer); checkBoss(); } });
+        bossBtn.addEventListener('mouseleave', () => { if(bossPhase === 5) { clearTimeout(bossTimer); checkBoss(); } });
+
+        // クリック制御
+        bossBtn.addEventListener('click', function(e) {
+            if (bossPhase === 1) {
+                bossPhase++; checkBoss();
+            } else if (bossPhase === 2) {
+                if (e.shiftKey) { bossPhase++; checkBoss(); } 
+                else { alert("何かが足りない。（ヒント：キーボードのあのキー）"); }
+            } else if (bossPhase === 3) {
+                bossPhase++; this.style.transform = "none"; checkBoss();
+            } else if (bossPhase === 4) {
+                // 第四形態はダブルクリック待ちなので何もしない
+                e.preventDefault();
+            }
+        });
+
+        // 第四形態：ダブルクリック
+        bossBtn.addEventListener('dblclick', function() {
+            if (bossPhase === 4) { bossPhase++; checkBoss(); }
+        });
+
+        function checkBoss() {
+            if (bossPhase === 1) {
+                bossBtn.innerText = "第一形態：クリックして浄化";
+            } else if (bossPhase === 2) {
+                bossBtn.innerText = "第二形態：Shiftキーを押しながら";
+            } else if (bossPhase === 3) {
+                bossBtn.innerText = "第三形態：逃がさないで";
+            } else if (bossPhase === 4) {
+                bossBtn.innerText = "第四形態：2回連続で";
+            } else if (bossPhase === 5) {
+                bossBtn.innerText = "最終形態：3秒間耐え抜け";
+            } else if (bossPhase > 5) {
+                $('final-boss-container').style.display = 'none';
+                trapFound('trap-final-boss'); // これで50個目クリア、エンディングへ！
+            }
+        }
+
+        // セーブデータ読み込み
+        const savedData = localStorage.getItem('eternel_save');
+        if (savedData) { 
+            JSON.parse(savedData).forEach(id => { 
+                foundTraps.add(id); 
+                if(id==='trap-fake-popup')$('popup-overlay').style.display='none'; 
+                if(id==='trap-stalker')$('stalker-dot').style.display='none'; 
+            }); 
+            $('progress-display').innerText = `Progress: [ ${foundTraps.size} / ${TOTAL_TRAPS} ]`; 
+            if (foundTraps.size === 49) $('final-boss-container').style.display = 'flex';
+            if (foundTraps.size >= TOTAL_TRAPS) purifyWebsite(); 
+        }
+        $('reset-save').addEventListener('click', () => { if(confirm("やり直しますか？")) { localStorage.removeItem('eternel_save'); location.reload(); } });
+
+        function triggerEnding() {
+            setTimeout(() => {
+                $('ending-screen').style.display = 'flex';
+                setTimeout(() => $('ending-screen').style.opacity = '1', 100);
+            }, 1000);
+        }
+
+        function purifyWebsite() {
+            document.body.className = ''; document.body.style = ''; $('main-wrapper').style = '';
+            $('logo').className = 'logo'; $('read-more-btn').innerText = "Read More"; $('trap-link').classList.remove('trap-overline');
+            document.querySelector('h1').innerText = "洗練された空間を、あなたに。"; $('copyright-year').innerText = new Date().getFullYear();
+            $('progress-display').innerText = "👑 CLEAR!"; $('progress-display').style.color = "#d4af37";
+            $('blur-text').classList.remove('blur-trap'); $('blur-text').style.filter = 'none';
+            $('mad-marquee').style.display = 'none'; $('fake-loader').style.display = 'none';
+            $('hero-img').style.transform = 'none'; $('hero-img').innerText = "美しい家具の画像";
+            $('popup-overlay').style.display = 'none'; $('stalker-dot').style.display = 'none';
+            $('pass-echo').style.display = 'none'; $('final-boss-container').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
